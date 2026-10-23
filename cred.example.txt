@@ -1,0 +1,2 @@
+username=student.demo
+password=fictional_password_replace_locally
