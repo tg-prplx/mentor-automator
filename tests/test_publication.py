@@ -1,4 +1,7 @@
 import importlib.util
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -47,3 +50,15 @@ def test_allowlisted_source_passes(monkeypatch):
         ),
     )
     assert publication.audit() == 0
+
+
+def test_publication_cli_handles_non_unicode_terminal_encoding():
+    result = subprocess.run(
+        [sys.executable, str(SPEC.origin)],
+        cwd=Path(__file__).resolve().parents[1],
+        env={**os.environ, "PYTHONIOENCODING": "cp1252"},
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr.decode("utf-8", errors="replace")
+    assert "Проверено файлов в Git:" in result.stdout.decode("utf-8")

@@ -70,4 +70,7 @@ def audit():
 
 
 if __name__ == "__main__":
+    # GitHub's Windows runner and redirected terminals can default to cp1252.
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     sys.exit(audit())
