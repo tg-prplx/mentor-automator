@@ -223,6 +223,8 @@ LLM_VISION=true
 ```text
 src/mentor_automator/
   main.py          запуск, supervision, блокировка процесса и shutdown
+  onboarding.py    мастер первого запуска, скрытый ввод и привязка Telegram
+  preflight.py     локальная проверка зависимостей без входа в Moodle
   config.py        runtime .env и проверка конфигурации
   auth.py          единственное чтение cred.txt при runtime-входе
   browser.py       видимый Chromium, курсор, сессия и сетевой FinalGate

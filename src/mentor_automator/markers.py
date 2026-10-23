@@ -31,10 +31,29 @@ async def apply_markers(browser, root, answer):
     homes = root.locator(".draghomes")
     for _ in range(100):
         placed = root.locator(".droparea .marker:not(.dragplaceholder)")
-        if not await placed.count():
+        before = await placed.count()
+        if not before:
             break
-        await browser.drag(placed.first, homes)
+        # Moodle ddmarker supports Escape to return a focused marker home.
+        # It avoids native text dragging and preserves the widget's own save/change events.
+        await browser.checkpoint()
+        await placed.first.press("Escape")
         await asyncio.sleep(0.15)
+        await browser.checkpoint()
+        if await placed.count() >= before:
+            # Older/custom widgets may only support mouse interaction.
+            box = await placed.first.bounding_box()
+            if not box:
+                raise QuestionError("MARKER_RESET_FAILED")
+            await browser.drag(
+                placed.first,
+                homes,
+                source_x=min(1.0 / box["width"], 0.5),
+                source_y=min(1.0 / box["height"], 0.5),
+            )
+            await asyncio.sleep(0.15)
+        if await placed.count() >= before:
+            raise QuestionError("MARKER_RESET_FAILED")
     if not await root.locator("input.choices").evaluate_all("ns=>ns.every(n=>!n.value)"):
         raise QuestionError("MARKER_RESET_FAILED")
     completed = []

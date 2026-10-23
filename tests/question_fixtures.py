@@ -21,8 +21,8 @@ def marker_question():
     <div class="ddarea"><div class="droparea" style="position:relative;width:360px;height:160px">
       <img class="dropbackground" alt="" src="{BACKGROUND}">
     </div><div class="draghomes" style="margin-top:20px;min-height:40px">
-      <span class="marker choice1 dragno2" style="display:inline-block;padding:6px;border:1px solid black"><span class="markertext">квадрат</span></span>
-      <span class="marker choice2 dragno1" style="display:inline-block;padding:6px;border:1px solid black"><span class="markertext">круг</span></span>
+      <span class="marker choice1 dragno2" tabindex="0" style="display:inline-block;padding:6px;border:1px solid black"><span class="markertext">квадрат</span></span>
+      <span class="marker choice2 dragno1" tabindex="0" style="display:inline-block;padding:6px;border:1px solid black"><span class="markertext">круг</span></span>
     </div></div><div class="ddform">
     <input type="hidden" class="choices choice1 noofdrags2" name="qmarkers_1" value="">
     <input type="hidden" class="choices choice2 noofdrags1" name="qmarkers_2" value="">
@@ -34,7 +34,13 @@ def marker_question():
     const save=()=>root.querySelectorAll('input.choices').forEach(input=>{{
       input.value=[...root.querySelectorAll('.droparea .marker.choice'+number(input))].map(n=>n.dataset.coords).join(';');
     }});
-    document.addEventListener('mousedown',e=>{{marker=e.target.closest('.marker')}});
+    // Moodle core/dragdrop.prepare prevents default selection/native drag behaviour.
+    document.addEventListener('mousedown',e=>{{marker=e.target.closest('.marker');if(marker)e.preventDefault()}});
+    window.markerKeyboardEnabled=true;
+    document.addEventListener('keydown',e=>{{
+      const placed=e.target.closest('.droparea .marker');
+      if(window.markerKeyboardEnabled&&e.key==='Escape'&&placed){{e.preventDefault();placed.remove();save()}}
+    }});
     document.addEventListener('mouseup',e=>{{
       if(!marker)return;
       const bg=root.querySelector('.dropbackground'),rect=bg.getBoundingClientRect();

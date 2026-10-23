@@ -228,10 +228,12 @@ async def test_gapselect_and_embedded_radio_checkbox_groups(environment, tmp_pat
     assert await agent.browser.page.locator("#cloze input:checked").count() == 3
 
 
-async def test_markers_coordinates_copies_and_reapplication(environment, tmp_path):
+@pytest.mark.parametrize("keyboard", [False, True])
+async def test_markers_coordinates_copies_and_reapplication(environment, tmp_path, keyboard):
     agent, _, quiz = await setup_agent(environment, tmp_path)
     environment[-1].custom_questions = marker_question()
     await agent.moodle.start(quiz)
+    await agent.browser.page.evaluate("enabled=>window.markerKeyboardEnabled=enabled", keyboard)
     question, index = (await agent.moodle.questions())[0]
     assert question.kind == "markers"
     assert [o.capacity for o in question.options] == [2, 1]
@@ -257,7 +259,9 @@ async def test_markers_coordinates_copies_and_reapplication(environment, tmp_pat
             ]
         }
     )
-    await agent.moodle.apply(question, index, repeated)
+    # Selection can trigger native text dragging instead of the widget's mouse-up handler.
+    await agent.browser.page.locator(".droparea .markertext").first.select_text()
+    await asyncio.wait_for(agent.moodle.apply(question, index, repeated), 15)
     assert await agent.browser.page.locator(".droparea .marker.choice1").count() == 2
     invalid = answer.model_copy(
         update={"placements": [Placement(choice="1", x=0.1, y=0.1), Placement(choice="1", x=0.2, y=0.2)]}
